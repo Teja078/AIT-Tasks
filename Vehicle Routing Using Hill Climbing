@@ -1,0 +1,61 @@
+import random
+
+# City name
+city_names = ['Depot', 'Delhi', 'Mumbai', 'Chennai', 'Kolkata']
+
+def total_route_distance(route, graph):
+    dist = 0
+    for i in range(len(route) - 1):
+        d = graph[route[i]][route[i+1]]
+        if d == 0 and route[i] != route[i+1]:
+            return 9999  # invalid route (no direct connection)
+        dist += d
+    d = graph[route[-1]][route[0]]  # return to depot
+    if d == 0 and route[-1] != route[0]:
+        return 9999
+    dist += d
+    return dist
+
+def get_neighbors(route):
+    neighbors = []
+    for i in range(1, len(route) - 1):  # don't swap depot
+        for j in range(i+1, len(route)):
+            neighbor = route[:]
+            neighbor[i], neighbor[j] = neighbor[j], neighbor[i]
+            neighbors.append(neighbor)
+    return neighbors
+
+def hill_climbing(graph):
+    n = len(graph)
+    route = list(range(n))  # e.g., [0, 1, 2, 3, 4]
+    current_distance = total_route_distance(route, graph)
+    improved = True
+
+    while improved:
+        improved = False
+        neighbors = get_neighbors(route)
+        for neighbor in neighbors:
+            neighbor_distance = total_route_distance(neighbor, graph)
+            if neighbor_distance < current_distance:
+                route = neighbor
+                current_distance = neighbor_distance
+                improved = True
+                break
+    return route, current_distance
+
+
+graph = [
+    [0, 2, 3, 0, 0],  # Depot connected to Delhi, Mumbai
+    [2, 0, 0, 1, 3],  # Delhi connected to Depot, Chennai, Kolkata
+    [3, 0, 0, 2, 0],  # Mumbai connected to Depot, Chennai
+    [0, 1, 2, 0, 3],  # Chennai connected to Delhi, Mumbai, Kolkata
+    [0, 3, 0, 3, 0]   # Kolkata connected to Delhi, Chennai
+]
+
+route, dist = hill_climbing(graph)
+
+route_names = [city_names[i] for i in route]
+
+print("Best Route:")
+print(" -> ".join(route_names + [route_names[0]]))
+print("Total Travel Distance:", dist)
